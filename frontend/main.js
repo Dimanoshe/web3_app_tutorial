@@ -3,6 +3,7 @@ Moralis.serverURL = 'https://4u6qe0qwyedr.usemoralis.com:2053/server'
 
 init = async () => {
     hideElement(userinfo);
+    hideElement(createItemForm);
     window.web3 = await Moralis.Web3.enable();
     initUser();
 } 
@@ -11,9 +12,13 @@ initUser = async () => {
     if (await Moralis.User.current()){
         hideElement(userConnectButton);
         showElement(userProfileButton);
+        showElement(openCreateItemButton);
+
     }else{
         showElement(userConnectButton);
         hideElement(userProfileButton);
+        hideElement(openCreateItemButton);
+
     }
 }
 
@@ -93,6 +98,20 @@ const userAvatarFile = document.getElementById("fileAvatar");
 document.getElementById("btnCloseUserInfo").onclick = () => hideElement(userInfo);
 document.getElementById("btnLogout").onclick = logout;
 document.getElementById("btnSaveUserInfo").onclick = saveUserInfo;
+
+
+
+const createItemForm = document.getElementById("createItem");
+
+const createItemNameField = document.getElementById("txtCreateItemName");
+const createItemDescriptionField = document.getElementById("txtCreateItemDescription");
+const createItemPriceField = document.getElementById("numCreateItemPrice");
+const createItemStatusField = document.getElementById("selectCreateItemStatus");
+const createItemFile = document.getElementById("fileCreateItemFile");
+
+const openCreateItemButton = document.getElementById("btnOpenCreateItem");
+openCreateItemButton.onclick = () => showElement(createItemForm);
+document.getElementById("btnCloseCreateItem").onclick = () => hideElement(createItemForm);
 
 
 

@@ -6,6 +6,7 @@
 Start an instance of ganache on your localhost and point it to the truffle-config.js.
 
 ## FRPC
+Download FRPC.
 Create server on moralis.
 In Devchain Proxy Settings, copy the FRPC configuration.
 
@@ -54,6 +55,6 @@ Moralis.Cloud.define("getUserItems", async (request) => {
       "tokenUri": queryResults[i].attributes.token_uri,
     });
   }
-  return sum / results;
+  return results;
 });
 ```

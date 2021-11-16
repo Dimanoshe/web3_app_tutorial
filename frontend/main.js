@@ -1,13 +1,15 @@
 Moralis.initialize("q7Gl3yXVfabVqt2iEO9t9eX7En4U7jccpRyjYAVq");
 Moralis.serverURL = 'https://4u6qe0qwyedr.usemoralis.com:2053/server'
-const TOKEN_CONTRACT_ADDRESS = "0x3fB2331296cBA90428e5D1cf457BCd8e011C6b0a";
-
+const TOKEN_CONTRACT_ADDRESS = "0xb07fd4Ab03628Fd9658efFe5Aa93DB238C85C466";
+const MARKETPLACE_CONTRACT_ADDRESS = "0x7CD3487fd2F89CE137707BABc8cA37DD60fd6980"
 init = async () => {
     hideElement(userItemsSection);
     hideElement(userInfo);
     hideElement(createItemForm);
     window.web3 = await Moralis.Web3.enable();
     window.tokenContract = new web3.eth.Contract(tokenContractAbi, TOKEN_CONTRACT_ADDRESS);
+    window.marketplaceContract = new web3.eth.Contract(marketplaceContractAbi, MARKETPLACE_CONTRACT_ADDRESS);
+
     initUser();
     
 } 
@@ -128,9 +130,23 @@ createItem = async () => {
     item.set('metadataFileHash', nftFileMetadataFileHash);
     item.set('nftId', nftId);
     item.set('nftContractAddress', TOKEN_CONTRACT_ADDRESS);
-
     await item.save();
     console.log(item);
+
+    user = await Moralis.User.current();
+    const userAddress = user.get('ethAddress');
+
+    switch(createItemStatusField.value){
+        case "0":
+            return;
+        case "1":
+            await ensureMarketplaceIsApproved(nftId, TOKEN_CONTRACT_ADDRESS);
+            await marketplaceContract.methods.addItemToMarket(nftId, TOKEN_CONTRACT_ADDRESS, createItemPriceField.value).send({from: userAddress });
+            break;
+        case "2":
+            alert("Not yet supported!");
+            return;
+    }
 }
 
 mintNft = async (metadataUrl) => {
@@ -182,6 +198,16 @@ getAndRenderItemData = (item, renderFunction) => {
         data.tokenAddress = item.tokenAddress;
         renderFunction(data);
     })
+}
+
+ensureMarketplaceIsApproved = async (tokenId, tokenAddress) => {
+    user = await Moralis.User.current();
+    const userAddress = user.get('ethAddress');
+    const contract = new web3.eth.Contract(tokenContractAbi, tokenAddress);
+    const approvedAddress = await contract.methods.getApproved(tokenId).call({from: userAddress});
+    if (approvedAddress != MARKETPLACE_CONTRACT_ADDRESS){
+        await contract.methods.approve(MARKETPLACE_CONTRACT_ADDRESS,tokenId).send({from: userAddress});
+    }
 }
 
 hideElement = (element) => element.style.display = "none";

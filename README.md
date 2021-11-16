@@ -58,3 +58,10 @@ Moralis.Cloud.define("getUserItems", async (request) => {
   return results;
 });
 ```
+
+## Plugins
+
+Add itemAdded(uint256, uint256, address, uint256)
+and itemSold(uint256, address, uint256)
+to servers-->Wiew Details-->Sync-->Sync And Watch Contracts events
+

@@ -1,7 +1,7 @@
-Moralis.initialize("q7Gl3yXVfabVqt2iEO9t9eX7En4U7jccpRyjYAVq");
-Moralis.serverURL = 'https://4u6qe0qwyedr.usemoralis.com:2053/server'
-const TOKEN_CONTRACT_ADDRESS = "0xb07fd4Ab03628Fd9658efFe5Aa93DB238C85C466";
-const MARKETPLACE_CONTRACT_ADDRESS = "0x7CD3487fd2F89CE137707BABc8cA37DD60fd6980"
+Moralis.initialize("DVfKw4bAaagJIXxxW3bT51wVwmCLgeu63H5IPaMG");
+Moralis.serverURL = 'https://8o7ajzjphzkf.usemoralis.com:2053/server'
+const TOKEN_CONTRACT_ADDRESS = "0x793643E014D01f134673e3B24d11E54AECaD831e";
+const MARKETPLACE_CONTRACT_ADDRESS = "0x438e733982e1bA52A8e79e02e2960d61f60a93dA"
 init = async () => {
     hideElement(userItemsSection);
     hideElement(userInfo);
@@ -105,7 +105,7 @@ createItem = async () => {
     const metadata = {
         name: createItemNameField.value,
         description: createItemDescriptionField.value,
-        nftFilePath: nftFilePath
+        image: nftFilePath
     };
 
     const nftFileMetadataFile = new Moralis.File("metadata.json", {base64 : btoa(JSON.stringify(metadata))});
@@ -167,7 +167,6 @@ openUserItems = async () => {
 loadUserItems = async () => {
     const ownedItems = await Moralis.Cloud.run("getUserItems");
     ownedItems.forEach(item => {
-        console.log("ownedItems = ", ownedItems)
         getAndRenderItemData(item, renderUserItem);
     });
 }
@@ -181,7 +180,7 @@ initTemplate = (id) => {
 
 renderUserItem = (item) => {
     const userItem = userItemTemplate.cloneNode(true);
-    userItem.getElementsByTagName("img")[0].src = item.nftFilePath;
+    userItem.getElementsByTagName("img")[0].src = item.image;
     userItem.getElementsByTagName("img")[0].alt = item.name;
     userItem.getElementsByTagName("h5")[0].innerText = item.name;
     userItem.getElementsByTagName("p")[0].innerText = item.description;

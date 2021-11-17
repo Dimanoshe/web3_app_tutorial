@@ -9,11 +9,51 @@ init = async () => {
     window.web3 = await Moralis.Web3.enable();
     window.tokenContract = new web3.eth.Contract(tokenContractAbi, TOKEN_CONTRACT_ADDRESS);
     window.marketplaceContract = new web3.eth.Contract(marketplaceContractAbi, MARKETPLACE_CONTRACT_ADDRESS);
-
     initUser();
     loadItems();
     
+    const soldItemsQuery = new Moralis.Query('SoldItems');
+    const soldItemsSubscription = await soldItemsQuery.subscribe();
+    soldItemsSubscription.on("create", onItemSold);
+
+    const itemsAddedQuery = new Moralis.Query('ItemsForSale');
+    const itemsAddedSubscription = await itemsAddedQuery.subscribe();
+    itemsAddedSubscription.on("create", onItemAdded);
 } 
+
+onItemSold = async (item) => {
+    const listing = document.getElementById(`item-${item.attributes.uid}`);
+    if (listing){
+        listing.parentNode.removeChild(listing);
+    }
+    
+    user = await Moralis.User.current();
+    if (user){
+        if (user.get('accounts').includes(item.attributes.buyer)){
+            const params = {uid: `${item.attributes.uid}`};
+            const soldItem = await Moralis.Cloud.run('getItem', params);
+            if (soldItem){
+                getAndRenderItemData(soldItem, renderUserItem);
+            }
+        }
+    }
+}
+
+onItemAdded = async (item) => {
+    const params = {uid: `${item.attributes.uid}`};
+    const addedItem = await Moralis.Cloud.run('getItem', params);
+    if (addedItem){
+        user = await Moralis.User.current();
+        if (user){
+            if (user.get('accounts').includes(addedItem.ownerOf)){
+                getAndRenderItemData(addedItem, renderUserItem);
+  
+            }
+        }
+        getAndRenderItemData(addedItem, renderItem);
+    }
+
+}
 
 initUser = async () => {
     if (await Moralis.User.current()){
@@ -174,7 +214,11 @@ loadUserItems = async () => {
 
 loadItems = async () => {
     const items = await Moralis.Cloud.run("getItems");
+    user = await Moralis.User.current();
     items.forEach(item => {
+        if (user){
+            if (user.attributes.accounts.includes(item.ownerOf)) return;
+        }
         getAndRenderItemData(item, renderItem);
     });
 }
@@ -210,6 +254,7 @@ renderItem = (item) => {
     itemForSale.getElementsByTagName("p")[0].innerText = item.description;
 
     itemForSale.getElementsByTagName("button")[0].innerText = `Buy for ${item.askingPrice}`;
+    itemForSale.getElementsByTagName("button")[0].onclick = () => buyItem(item);
     itemForSale.id = `item-${item.uid}`;
     itemsForSale.appendChild(itemForSale);
 }
@@ -234,6 +279,15 @@ ensureMarketplaceIsApproved = async (tokenId, tokenAddress) => {
     if (approvedAddress != MARKETPLACE_CONTRACT_ADDRESS){
         await contract.methods.approve(MARKETPLACE_CONTRACT_ADDRESS,tokenId).send({from: userAddress});
     }
+}
+
+buyItem = async (item) => {
+    user = await Moralis.User.current();
+    if (!user){
+        login();
+        return;
+    } 
+    await marketplaceContract.methods.buyItem(item.uid).send({from: user.get('ethAddress'), value: item.askingPrice});
 }
 
 hideElement = (element) => element.style.display = "none";
